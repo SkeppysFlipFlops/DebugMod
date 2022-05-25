@@ -51,16 +51,35 @@ namespace DebugMod
             fsm3.SetState("Break");
             fsm4.SetState("Break");
         } //Room_Final_Boss
+        private static void ObtainDreamNail(int index)
+        {
+            string goName = "Witch Control";
+            string fsmName = "Control";
+            PlayMakerFSM fsm = FindFsmGlobally(goName, fsmName);
+            fsm.SetState("Pause");
+            fsm.SendEvent("FINISHED");
+            fsm.SendEvent("DREAM WAKE");
+            fsm.SendEvent("FINISHED");
+            fsm.SendEvent("FINISHED");
+            fsm.SendEvent("ZONE 1");
+            fsm.SendEvent("ZONE 2");
+            fsm.SendEvent("ZONE 3");
+            fsm.SendEvent("FINISHED");
+            DebugMod.HC.transform.position = new Vector3(263.1f, 52.406f);
+        }
         #endregion
         public static void DoRoomSpecific(string scene, int index)//index only used if multiple functionallities in one room, safe to ignore for now.
         {
-            switch (scene)
+               switch (scene)
             {
                 case "Deepnest_Spider_Town":
                     EnterSpiderTownTrap(index);
                     break;
                 case "Room_Final_Boss_Core":
                     BreakTHKChains(index);
+                    break;
+                case "Dream_NailCollection":
+                    ObtainDreamNail(index);
                     break;
                 default:
                     Console.AddLine("No Room Specific Function Found In: " + scene);
