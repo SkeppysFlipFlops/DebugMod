@@ -12,7 +12,7 @@ namespace DebugMod
     {
         //This class is intended to recreate some scenarios, with more accuracy than that of the savestate class. 
         //This should be eventually included to compatible with savestates, stored in the same location for easier access.
-        #region Functions
+        #region Rooms
         private static void EnterSpiderTownTrap(int index) //Deepnest_Spider_Town
         {
             string goName = "RestBench Spider";
@@ -80,17 +80,24 @@ namespace DebugMod
             }
             else if(index == 2)
             {
-                //start phase 2
-
-
+                //start phase 1
+                DebugMod.HC.transform.position = new Vector3(19.5810f, 29.41113f); //make sure youre at the right spot ig?
+                string goName = "Mage Lord"; //soul master gameobject
+                string fsmName = "Mage Lord";//soul master fsm
+                string quakegoname= "Quake Fake Parent";
+                string quakefsmname = "Appear";
+                PlayMakerFSM fsm = FindFsmGlobally(goName, fsmName);
+                PlayMakerFSM quakeFakeFSM = FindFsmGlobally(quakegoname, quakefsmname);
+                fsm.SetState("Init"); //to close gate and avoid save shenanigans
+                GameObject.Destroy(GameObject.Find("Mage Lord"));
+                quakeFakeFSM.SendEvent("QUAKE FAKE APPEAR");
             }
-            
         }
         #endregion
 
         public static void DoRoomSpecific(string scene, int index)//index only used if multiple functionallities in one room, safe to ignore for now.
         {
-               switch (scene)
+            switch (scene)
             {
                 case "Deepnest_Spider_Town":
                     EnterSpiderTownTrap(index);
@@ -104,7 +111,6 @@ namespace DebugMod
                 case "Ruins1_24":
                     FastSoulMaster(index);
                     break;
-
                 default:
                     Console.AddLine("No Room Specific Function Found In: " + scene);
                     break;
