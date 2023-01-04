@@ -67,7 +67,27 @@ namespace DebugMod
             fsm.SendEvent("FINISHED");
             DebugMod.HC.transform.position = new Vector3(263.1f, 52.406f);
         }
+        private static void FastSoulMaster(int index)
+        {
+            if(index == 1)
+            {
+                //start phase 1
+                DebugMod.HC.transform.position = new Vector3(19.5810f, 29.41113f); //make sure youre at the right spot ig?
+                string goName = "Mage Lord"; //soul master gameobject
+                string fsmName = "Mage Lord";//soul master fsm
+                PlayMakerFSM fsm = FindFsmGlobally(goName, fsmName);
+                fsm.SetState("Init");
+            }
+            else if(index == 2)
+            {
+                //start phase 2
+
+
+            }
+            
+        }
         #endregion
+
         public static void DoRoomSpecific(string scene, int index)//index only used if multiple functionallities in one room, safe to ignore for now.
         {
                switch (scene)
@@ -81,6 +101,10 @@ namespace DebugMod
                 case "Dream_NailCollection":
                     ObtainDreamNail(index);
                     break;
+                case "Ruins1_24":
+                    FastSoulMaster(index);
+                    break;
+
                 default:
                     Console.AddLine("No Room Specific Function Found In: " + scene);
                     break;
