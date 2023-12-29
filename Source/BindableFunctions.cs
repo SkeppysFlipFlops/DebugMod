@@ -9,6 +9,8 @@ using HutongGames.PlayMaker;
 using UnityEngine.SceneManagement;
 using HutongGames.PlayMaker.Actions;
 using System.Collections;
+using DebugMod.JankColoStuff;
+using SpeedRunQoL.Functionality;
 
 namespace DebugMod
 {
@@ -24,8 +26,36 @@ namespace DebugMod
         [BindableMethod(name = "Clear White Screen", category = "Misc")]
         public static void ClearWhiteScreen()
         {
+            //fix white screen 
+            string wakeControl = "Dream Return";
+            GameObject knight = GameObject.Find("Knight");
+            PlayMakerFSM wakeFSM = knight.LocateMyFSM(wakeControl);
+            wakeFSM.SetState("GET UP");
+            wakeFSM.SendEvent("FINISHED");
             GameObject.Find("Blanker White").LocateMyFSM("Blanker Control").SendEvent("FADE OUT");
             HeroController.instance.EnableRenderer();
+        }
+
+        [BindableMethod(name = "Reset Encounters", category = "Misc")]
+        public static void ResetProxyFSMEncounters()
+        {
+            try
+            {
+                //literally couldnt figure out how to get this to not be awful to look at
+                //this resets the fsm responsible for a couple weird persistent values with the knight
+                GameObject knight = GameObject.Find("Knight");
+                PlayMakerFSM proxyFSM = knight.LocateMyFSM("ProxyFSM");
+                proxyFSM.FsmVariables.FindFsmBool("Faced Radiance").Value = false;
+                proxyFSM.FsmVariables.FindFsmBool("Faced Nightmare").Value = false;
+                proxyFSM.FsmVariables.FindFsmBool("Faced Zote").Value = false;
+
+
+            }
+            catch (Exception e)
+            {
+                Console.AddLine("Error while attempting to reset Proxy variables");
+                DebugMod.instance.Log("Error while attempting to reset Knight-ProxyFSM variables: \n" + e);
+            }
         }
 
         [BindableMethod(name = "Nail Damage +4", category = "Misc")]
@@ -253,37 +283,37 @@ namespace DebugMod
         [BindableMethod(name = "Quickslot (save)", category = "Savestates")]
         public static void SaveState()
         {
-            DebugMod.saveStateManager.SaveState(SaveStateType.Memory);
+            DebugMod.saveStateManager.SaveNewState(SaveStateType.Memory);
         }
 
         [BindableMethod(name = "Quickslot (load)", category = "Savestates")]
         public static void LoadState()
         {
-            DebugMod.saveStateManager.LoadState(SaveStateType.Memory);
+            DebugMod.saveStateManager.LoadNewState(SaveStateType.Memory);
         }
 
         [BindableMethod(name = "Quickslot save to file", category = "Savestates")]
         public static void CurrentSaveStateToFile()
         {
-            DebugMod.saveStateManager.SaveState(SaveStateType.File);
+            DebugMod.saveStateManager.SaveNewState(SaveStateType.File);
         }
 
         [BindableMethod(name = "Load file to quickslot", category = "Savestates")]
         public static void CurrentSlotToSaveMemory()
         {
-            DebugMod.saveStateManager.LoadState(SaveStateType.File);
+            DebugMod.saveStateManager.LoadNewState(SaveStateType.File);
         }
 
         [BindableMethod(name = "Save new state to file", category = "Savestates")]
         public static void NewSaveStateToFile()
         {
-            DebugMod.saveStateManager.SaveState(SaveStateType.SkipOne);
+            DebugMod.saveStateManager.SaveNewState(SaveStateType.SkipOne);
 
         }
         [BindableMethod(name = "Load new state from file", category = "Savestates")]
         public static void LoadFromFile()
         {
-            DebugMod.saveStateManager.LoadState(SaveStateType.SkipOne);
+            DebugMod.saveStateManager.LoadNewState(SaveStateType.SkipOne);
         }
         [BindableMethod(name = "Next Save Page", category = "Savestates")]
         public static void NextStatePage()
@@ -1650,6 +1680,113 @@ namespace DebugMod
             Console.AddLine("Made player face right");
         }
 
+        #endregion
+
+        #region ColoWaves
+        [BindableMethod(name = "(0) Reset Bronze Waves", category = "Colosseum 1")]
+        public static void Colo1Preset0()
+        {
+            ColoBronzeWaveChanger.SetWavePreset(0);
+        }
+
+        [BindableMethod(name = "(1) Aspids", category = "Colosseum 1")]
+        public static void Colo1Preset1()
+        {
+            ColoBronzeWaveChanger.SetWavePreset(1);
+        }
+
+        [BindableMethod(name = "(2) Baldurs 2", category = "Colosseum 1")]
+        public static void Colo1Preset2()
+        {
+            ColoBronzeWaveChanger.SetWavePreset(2);
+        }
+
+        [BindableMethod(name = "(3) Gruzzers", category = "Colosseum 1")]
+        public static void Colo1Preset3()
+        {
+            ColoBronzeWaveChanger.SetWavePreset(3);
+        }
+
+        [BindableMethod(name = "(4) Zote", category = "Colosseum 1")]
+        public static void Colo1Preset4()
+        {
+            ColoBronzeWaveChanger.SetWavePreset(4);
+        }
+
+        //Colo 2
+        [BindableMethod(name = "(0) Reset Silver Waves", category = "Colosseum 2")]
+        public static void Colo2Preset0()
+        {
+            ColoSilverWaveChanger.SetWavePreset(0);
+        }
+
+        [BindableMethod(name = "(1) Hoppers", category = "Colosseum 2")]
+        public static void Colo2Preset1()
+        {
+            ColoSilverWaveChanger.SetWavePreset(1);
+        }
+
+        [BindableMethod(name = "(2) Grub Mimic", category = "Colosseum 2")]
+        public static void Colo2Preset2()
+        {
+            ColoSilverWaveChanger.SetWavePreset(2);
+        }
+
+        [BindableMethod(name = "(3) Obbles", category = "Colosseum 2")]
+        public static void Colo2Preset3()
+        {
+            ColoSilverWaveChanger.SetWavePreset(3);
+        }
+
+        [BindableMethod(name = "(4) Oblobbles", category = "Colosseum 2")]
+        public static void Colo2Preset4()
+        {
+            ColoSilverWaveChanger.SetWavePreset(4);
+        }
+
+        //Colo 3 Wave Presets, see ColoGoldWavechanger.cs
+
+        [BindableMethod(name = "(0) Reset Gold Waves", category = "Colosseum 3")]
+        public static void Colo3Preset0()
+        {
+            ColoGoldWaveChanger.SetWavePreset(0);
+        }
+
+        [BindableMethod(name = "(1) Frogs", category = "Colosseum 3")]
+        public static void Colo3Preset1()
+        {
+            ColoGoldWaveChanger.SetWavePreset(1);
+        }
+
+        [BindableMethod(name = "(2) Sanctum Waves", category = "Colosseum 3")]
+        public static void Colo3Preset2()
+        {
+            ColoGoldWaveChanger.SetWavePreset(2);
+        }
+
+        [BindableMethod(name = "(3) Mawlurks", category = "Colosseum 3")]
+        public static void Colo3Preset3()
+        {
+            ColoGoldWaveChanger.SetWavePreset(3);
+        }
+
+        [BindableMethod(name = "(4) Floorless", category = "Colosseum 3")]
+        public static void Colo3Preset4()
+        {
+            ColoGoldWaveChanger.SetWavePreset(4);
+        }
+
+        [BindableMethod(name = "(5) Final Waves", category = "Colosseum 3")]
+        public static void Colo3Preset5()
+        {
+            ColoGoldWaveChanger.SetWavePreset(5);
+        }
+
+        [BindableMethod(name = "(6) GodTamer", category = "Colosseum 3")]
+        public static void Colo3Preset6()
+        {
+            ColoGoldWaveChanger.SetWavePreset(6);
+        }
         #endregion
     }
 }

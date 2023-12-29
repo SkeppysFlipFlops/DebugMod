@@ -82,21 +82,28 @@ namespace DebugMod
         }
 
         #region saving
-        public void SaveState(SaveStateType stateType)
+        //changed name to avoid clashes with the class
+        public void SaveNewState(SaveStateType stateType)
         {
-            switch (stateType)
+            if (!SaveState.loadingSavestate)
             {
-                case SaveStateType.Memory:
-                    quickState.SaveTempState();
-                    break;
-                case SaveStateType.File or SaveStateType.SkipOne:
-                    if (!inSelectSlotState)
-                    {
-                        RefreshStateMenu();
-                        GameManager.instance.StartCoroutine(SelectSlot(true, stateType));
-                    }
-                    break;
-                default: break;
+                switch (stateType)
+                {
+                    case SaveStateType.Memory:
+                        quickState.SaveTempState();
+                        break;
+                    case SaveStateType.File or SaveStateType.SkipOne:
+                        if (!inSelectSlotState)
+                        {
+                            RefreshStateMenu();
+                            GameManager.instance.StartCoroutine(SelectSlot(true, stateType));
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                Console.AddLine("Cannot save new states while loading");
             }
         }
 
@@ -104,30 +111,31 @@ namespace DebugMod
 
         #region loading
 
-        public void LoadState(SaveStateType stateType)
+        public void LoadNewState(SaveStateType stateType)
         {
-            switch (stateType)
             {
-                case SaveStateType.Memory:
-                    if (quickState.IsSet())
-                    {
-                        quickState.LoadTempState();
-                    }
-                    else
-                    {
-                        Console.AddLine("No save state active");
-                    }
-                    break;
-                case SaveStateType.File or SaveStateType.SkipOne:
-                
-                    if (!inSelectSlotState)
-                    {
-                        RefreshStateMenu();
-                        GameManager.instance.StartCoroutine(SelectSlot(false, stateType));
-                    }
-                    break;
-                default:
-                    break;
+                switch (stateType)
+                {
+                    case SaveStateType.Memory:
+                        if (quickState.IsSet())
+                        {
+                            quickState.LoadTempState();
+                        }
+                        else
+                        {
+                            Console.AddLine("No save state active");
+                        }
+                        break;
+                    case SaveStateType.File or SaveStateType.SkipOne:
+                        if (!inSelectSlotState)
+                        {
+                            RefreshStateMenu();
+                            GameManager.instance.StartCoroutine(SelectSlot(false, stateType));
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
