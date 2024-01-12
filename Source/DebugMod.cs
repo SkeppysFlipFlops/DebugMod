@@ -86,7 +86,7 @@ namespace DebugMod
                 instance.Log("Done! Time taken: " + (Time.realtimeSinceStartup - startTime) + "s. Found " + bindMethods.Count + " methods");
 
                 settings = GlobalSettings;
-
+       
                 if (settings.FirstRun)
                 {
                     instance.Log("First run detected, setting default binds");
@@ -97,6 +97,7 @@ namespace DebugMod
                     settings.NumPadForSaveStates = false;
                     settings.MaxSaveStates = 6;
                     settings.SaveStatePages = 10;
+                    settings.SaveStateGlitchFixes = true;
                     settings.binds.Clear();
 
                     settings.binds.Add("Toggle All UI", (int)KeyCode.F1);
@@ -176,7 +177,7 @@ namespace DebugMod
         
         public override string GetVersion()
         {
-            string version = "1.5.8";
+            string version = "1.5.9";
 #if DEBUG
             version = string.Concat(version, "-dev");
 #endif

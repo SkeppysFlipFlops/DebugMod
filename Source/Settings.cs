@@ -93,5 +93,11 @@ namespace DebugMod
             get => GetFloat(0.1f);
             set => SetFloat(value);
         }
+
+        public bool SaveStateGlitchFixes
+        {
+            get => GetBool(true);
+            set => SetBool(value);
+        }
     }
 }

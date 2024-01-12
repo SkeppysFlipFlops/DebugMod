@@ -8,6 +8,8 @@ using System.Text;
 using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
+
+
 namespace DebugMod
 {
     /// <summary>
@@ -15,6 +17,9 @@ namespace DebugMod
     /// </summary>
     internal class SaveState
     {
+        //used to stop double loads/saves
+        public static bool loadingSavestate = false;
+
         [Serializable]
         public class SaveStateData
         {
@@ -191,6 +196,13 @@ namespace DebugMod
 
         private IEnumerator LoadStateCoro()
         {
+            //prevent double loads/saves, black screen, etc
+            loadingSavestate = true;
+
+            //timer for loading savestates, used in diagnostic purposes
+            System.Diagnostics.Stopwatch loadingStateTimer = new System.Diagnostics.Stopwatch();
+            loadingStateTimer.Start();
+
             /*
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
@@ -236,32 +248,6 @@ namespace DebugMod
             HeroController.instance.geoCounter.playerData = PlayerData.instance;
             HeroController.instance.geoCounter.TakeGeo(0);
 
-            if (PlayerData.instance.MPCharge >= 99 || oldMP >= 99)
-            {
-                if (PlayerData.instance.MPReserve > 0)
-                {
-                    HeroController.instance.TakeReserveMP(1);
-                    HeroController.instance.AddMPChargeSpa(1);
-                }
-                HeroController.instance.TakeMP(1);
-                yield return null;
-                HeroController.instance.AddMPCharge(1);
-            }
-            else
-            {
-                if(PlayerData.instance.MPCharge != 0)
-                {
-                    HeroController.instance.TakeMP(1);
-                    HeroController.instance.AddMPCharge(1);
-                }
-                else
-                {
-                    HeroController.instance.AddMPCharge(1);
-                    HeroController.instance.TakeMP(1);
-                }
-
-            }
-
             HeroController.instance.proxyFSM.SendEvent("HeroCtrl-HeroLanded");
             HeroAnimationController component = HeroController.instance.GetComponent<HeroAnimationController>();
             typeof(HeroAnimationController).GetField("pd", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(component, PlayerData.instance);
@@ -283,6 +269,36 @@ namespace DebugMod
                 HeroController.instance.FaceLeft();
             }
 
+            //This is all the shit that fixes lp debug
+            HeroController.instance.CharmUpdate();
+
+            PlayMakerFSM.BroadcastEvent("CHARM INDICATOR CHECK");    //update twister             
+            PlayMakerFSM.BroadcastEvent("UPDATE NAIL DAMAGE");       //update nail
+
+            //step 2,manually trigger vessels lol, this is the only way besides turning off the mesh, but that will break stuff when you collect them
+            if (PlayerData.instance.MPReserveMax < 33) GameObject.Find("Vessel 1").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 1").LocateMyFSM("vessel_orb").SetState("Up Check");
+            if (PlayerData.instance.MPReserveMax < 66) GameObject.Find("Vessel 2").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 2").LocateMyFSM("vessel_orb").SetState("Up Check");
+            if (PlayerData.instance.MPReserveMax < 99) GameObject.Find("Vessel 3").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 3").LocateMyFSM("vessel_orb").SetState("Up Check");
+            if (PlayerData.instance.MPReserveMax < 132) GameObject.Find("Vessel 4").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 4").LocateMyFSM("vessel_orb").SetState("Up Check");
+            //step 3, take and add some soul
+            HeroController.instance.TakeMP(1);
+            HeroController.instance.AddMPChargeSpa(1);
+            //step 4, run animations later to actually add the soul on the main vessel
+            PlayMakerFSM.BroadcastEvent("MP DRAIN");
+            PlayMakerFSM.BroadcastEvent("MP LOSE");
+            PlayMakerFSM.BroadcastEvent("MP RESERVE DOWN");
+
+            //write geo
+            HeroController.instance.geoCounter.geoTextMesh.text = data.savedPd.geo.ToString();
+
+            //this kills enemies that were dead on the state, they respawn from previous code
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(data.savedSd), SceneData.instance);
+
+
             if (DebugMod.settings.EnemiesPanelVisible) EnemiesPanel.RefreshEnemyList();
             //UnityEngine.Object.Destroy(GameCameras.instance.gameObject);
             //yield return null;
@@ -291,8 +307,73 @@ namespace DebugMod
             {
                 RoomSpecific.DoRoomSpecific(data.saveScene,data.useRoomSpecific);
             }
-            yield break;
             // need to redraw UI somehow
+
+            //end the timer
+            loadingStateTimer.Stop();
+            loadingSavestate = false;
+            TimeSpan loadingStateTime = loadingStateTimer.Elapsed;
+            //formattings not working on this version idk
+            string loadingtime = loadingStateTime.ToString();
+            Console.AddLine("Loaded savestate in " + loadingtime);
+
+            if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes();
+
+            //Benchwarp fixes courtesy of homothety, needed since savestates are now performed while paused
+            // Revert pause menu timescale
+            Time.timeScale = 1f;
+            GameManager.instance.FadeSceneIn();
+
+            // We have to set the game non-paused because TogglePauseMenu sucks and UIClosePauseMenu doesn't do it for us.
+            GameManager.instance.isPaused = false;
+            //This allows the next pause to stop the game correctly, idk what the variable for 1221 api is
+            //Time.TimeController.GenericTimeScale = 1f;x
+
+            yield break;
+
+
+
+        }
+
+        //these are toggleable, as they will prevent glitches from persisting
+        private void SaveStateGlitchFixes()
+        {
+            var rb2d = HeroController.instance.GetComponent<Rigidbody2D>();
+            GameObject knight = GameObject.Find("Knight");
+            PlayMakerFSM wakeFSM = knight.LocateMyFSM("Dream Return");
+            PlayMakerFSM spellFSM = knight.LocateMyFSM("Spell Control");
+
+            //White screen fixes
+            wakeFSM.SetState("Idle");
+
+            //float
+            HeroController.instance.AffectedByGravity(true);
+            rb2d.gravityScale = 0.79f;
+            spellFSM.SetState("Inactive");
+
+            //invuln
+            HeroController.instance.gameObject.LocateMyFSM("Roar Lock").FsmVariables.FindFsmBool("No Roar").Value = false;
+            HeroController.instance.cState.invulnerable = false;
+
+            //no clip
+            rb2d.isKinematic = false;
+
+            //TODO: Fix this so it works
+            //bench storage 
+            GameManager.instance.SetPlayerDataBool(nameof(PlayerData.atBench), false);
+
+            //if (HeroController.SilentInstance != null) (i cant find the equivalent for 1221 of silent instance)
+            //{
+                if (HeroController.instance.cState.onConveyor || HeroController.instance.cState.onConveyorV || HeroController.instance.cState.inConveyorZone)
+                {
+                    HeroController.instance.GetComponent<ConveyorMovementHero>()?.StopConveyorMove();
+                    HeroController.instance.cState.inConveyorZone = false;
+                    HeroController.instance.cState.onConveyor = false;
+                    HeroController.instance.cState.onConveyorV = false;
+                }
+
+                HeroController.instance.cState.nearBench = false;
+            //}
         }
         #endregion
 
