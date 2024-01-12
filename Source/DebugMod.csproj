@@ -63,6 +63,9 @@
       <HintPath>.\References\PlayMaker.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="SpeedRunQoL">
+      <HintPath>References\SpeedRunQoL.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Drawing" />
@@ -80,6 +83,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindableMethod.cs" />
+    <Compile Include="ColoWaveChanger\ColoBronzeWaveChanger.cs" />
+    <Compile Include="ColoWaveChanger\ColoGoldWaveChanger.cs" />
+    <Compile Include="ColoWaveChanger\ColoSilverWaveChanger.cs" />
     <Compile Include="RoomSpecific.cs" />
     <Compile Include="SavePositionManager.cs" />
     <Compile Include="EnemiesPanel.cs" />
