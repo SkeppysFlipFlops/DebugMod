@@ -303,10 +303,6 @@ namespace DebugMod
             //UnityEngine.Object.Destroy(GameCameras.instance.gameObject);
             //yield return null;
             //DebugMod.GM.SetupSceneRefs();
-            if(data.useRoomSpecific != 0)
-            {
-                RoomSpecific.DoRoomSpecific(data.saveScene,data.useRoomSpecific);
-            }
             // need to redraw UI somehow
 
             //end the timer
@@ -319,6 +315,10 @@ namespace DebugMod
 
             if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes();
 
+            if (data.useRoomSpecific != 0)
+            {
+                RoomSpecific.DoRoomSpecific(data.saveScene, data.useRoomSpecific);
+            }
             //Benchwarp fixes courtesy of homothety, needed since savestates are now performed while paused
             // Revert pause menu timescale
             Time.timeScale = 1f;

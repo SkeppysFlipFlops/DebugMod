@@ -1,17 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.IO;
 using UnityEngine;
 using GlobalEnums;
-using HutongGames.PlayMaker;
 using UnityEngine.SceneManagement;
-using HutongGames.PlayMaker.Actions;
 using System.Collections;
 using DebugMod.JankColoStuff;
-using SpeedRunQoL.Functionality;
-
 namespace DebugMod
 {
     public static class BindableFunctions
@@ -195,24 +190,6 @@ namespace DebugMod
             }
         }
 
-        [BindableMethod(name = "Yeet Cornifer-Toggle", category = "Misc")]
-        public static void CorniferYeet()
-        {
-            corniferYeeteded = !corniferYeeteded;
-
-            if (corniferYeeteded)
-            {
-                CorniferYeeted();
-                UnityEngine.SceneManagement.SceneManager.activeSceneChanged += CorniferYeeted;
-                Console.AddLine("Cornifer yeeted on next loads lol");
-            }
-            else
-            {
-                UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= CorniferYeeted;
-                Console.AddLine("Cornifer unyeeted from next loads on???");
-            }
-        }
-
         private static void CorniferYeeted(Scene current, Scene next) => CorniferYeeted();
 
         private static void CorniferYeeted()
@@ -266,6 +243,33 @@ namespace DebugMod
             DebugMod.noclip=false;
         }
 
+        [BindableMethod(name = "Yeet Cornifer-Toggle", category = "Misc 2")]
+        public static void CorniferYeet()
+        {
+            corniferYeeteded = !corniferYeeteded;
+
+            if (corniferYeeteded)
+            {
+                CorniferYeeted();
+                UnityEngine.SceneManagement.SceneManager.activeSceneChanged += CorniferYeeted;
+                Console.AddLine("Cornifer yeeted on next loads lol");
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= CorniferYeeted;
+                Console.AddLine("Cornifer unyeeted from next loads on???");
+            }
+        }
+        [BindableMethod(name = "show chain window (physics)", category = "Misc 2")]
+        public static void ToggleChainTimerPhysics()
+        {
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics;
+        }
+        [BindableMethod(name = "show chain window (graphics)", category = "Misc 2")]
+        public static void ToggleChainTimerGraphics()
+        {
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics;
+        }
         #endregion
 
         #region SaveStates 

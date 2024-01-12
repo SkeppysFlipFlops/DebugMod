@@ -1,12 +1,10 @@
 ﻿using System.Collections;
 using System.Linq;
-using DebugMod;
 using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-namespace SpeedRunQoL.Functionality
 
+namespace DebugMod.JankColoStuff
 {
     public class ColoSilverWaveChanger
     {
@@ -108,7 +106,7 @@ namespace SpeedRunQoL.Functionality
 
         }
 
-        public static void debugwaves()
+        public static void DebugWaves()
         {
             GameObject waveController = GameObject.Find("Colosseum Manager");
             PlayMakerFSM fsm = waveController.LocateMyFSM("Battle Control");

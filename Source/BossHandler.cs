@@ -18,7 +18,6 @@ namespace DebugMod
         public static bool ghostFound;
         
         private static bool fsmToggle = false;
-        private static NonBouncer _coro;
 
         public static void LookForBoss(string sceneName)
         {

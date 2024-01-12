@@ -15,7 +15,6 @@ namespace DebugMod
         private static GameManager _gm;
         private static InputHandler _ih;
         private static HeroController _hc;
-        private static NailSlash _ns;
         private static GameObject _refKnight;
         private static PlayMakerFSM _refKnightSlash;
         private static CameraController _refCamera;
@@ -156,6 +155,8 @@ namespace DebugMod
                 ModHooks.Instance.BeforeSceneLoadHook += OnLevelUnload;
                 ModHooks.Instance.TakeHealthHook += PlayerDamaged;
                 ModHooks.Instance.ApplicationQuitHook += SaveSettings;
+                GameManager.instance.gameObject.AddComponent<ChainTimer>();
+                ModHooks.Instance.HeroUpdateHook += GameManager.instance.gameObject.GetComponent<ChainTimer>().HeroUpdate;
 
                 BossHandler.PopulateBossLists();
                 GUIController.Instance.BuildMenus();
@@ -177,7 +178,7 @@ namespace DebugMod
         
         public override string GetVersion()
         {
-            string version = "1.5.9";
+            string version = "1.5.10";
 #if DEBUG
             version = string.Concat(version, "-dev");
 #endif

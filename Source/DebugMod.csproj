@@ -63,9 +63,6 @@
       <HintPath>.\References\PlayMaker.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SpeedRunQoL">
-      <HintPath>References\SpeedRunQoL.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Drawing" />
@@ -118,6 +115,7 @@
     <Compile Include="GUIController.cs" />
     <Compile Include="InfoPanel.cs" />
     <Compile Include="PlayerDeathWatcher.cs" />
+    <Compile Include="ChainTimer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
