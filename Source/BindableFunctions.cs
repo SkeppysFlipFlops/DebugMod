@@ -1634,58 +1634,65 @@ namespace DebugMod
         [BindableMethod(name = "Show chain window (physics)", category = "Loggers")]
         public static void ToggleChainTimerPhysics()
         {
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics;
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            timer.LogChainsPhysics = !timer.LogChainsPhysics;
         }
         [BindableMethod(name = "Show chain window (graphics)", category = "Loggers")]
         public static void ToggleChainTimerGraphics()
         {
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics;
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            timer.LogChainsGraphics = !timer.LogChainsGraphics;
         }
         [BindableMethod(name = "Delete Chain Data", category = "Loggers")]
         public static void DeleteChainData()
         {
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
             //clear
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainGraphics.Clear();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainPhysics.Clear();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainGraphics.Clear();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainPhysics.Clear();
+            timer.timesJumpChainGraphics.Clear();
+            timer.timesJumpChainPhysics.Clear();
+            timer.framesJumpChainGraphics.Clear();
+            timer.framesJumpChainPhysics.Clear();
             //trim
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainGraphics.TrimExcess();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainPhysics.TrimExcess();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainGraphics.TrimExcess();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainPhysics.TrimExcess();
+            timer.timesJumpChainGraphics.TrimExcess();
+            timer.timesJumpChainPhysics.TrimExcess();
+            timer.framesJumpChainGraphics.TrimExcess();
+            timer.framesJumpChainPhysics.TrimExcess();
         }
         [BindableMethod(name = "Toggle TFT logging (physics)", category = "Loggers")]
         public static void ToggleTFTLoggingPhysics()
         {
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTPhysics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTPhysics;
-            Console.AddLine("logging tft (physics) now set to " + GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTPhysics.ToString());
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            timer.logTFTPhysics = !timer.logTFTPhysics;
+            Console.AddLine("logging tft (physics) now set to " + timer.logTFTPhysics.ToString());
         }
         [BindableMethod(name = "Toggle TFT logging (graphics)", category = "Loggers")]
         public static void ToggleTFTLoggingGraphics()
         {
-            
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTGraphics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTGraphics;
-            Console.AddLine("logging tft (graphics) now set to " + GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTGraphics.ToString());
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            timer.logTFTGraphics = !timer.logTFTGraphics;
+            Console.AddLine("logging tft (graphics) now set to " + timer.logTFTGraphics.ToString());
         }
         [BindableMethod(name = "Show Average TFT", category = "Loggers")]
         public static void ShowAverageTFT()
         {
-            Console.AddLine("Physics TFT avg (s): " + GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.Average().ToString());
-            Console.AddLine("Graphics TFT avg (s): " + GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.Average().ToString());
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            Console.AddLine("Physics TFT avg (s): " + timer.tftTimesPhysics.Average().ToString("N9"));
+            Console.AddLine("Graphics TFT avg (s): " + timer.tftTimesGraphics.Average().ToString("N9"));
         }
         [BindableMethod(name = "Clear TFT logger", category = "Loggers")]
         public static void ClearTFTValues()
         {
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics.Clear(); 
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.Clear();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics.TrimExcess();
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.TrimExcess();
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            timer.tftTimesGraphics.Clear(); 
+            timer.tftTimesPhysics.Clear();
+            timer.tftTimesGraphics.TrimExcess();
+            timer.tftTimesPhysics.TrimExcess();
         }
         [BindableMethod(name = "Export TFT data to file (physics)", category = "Loggers")]
         public static void TFTToFilePhysics()
         {
-            List<float> orig = GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics;
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            List<float> orig = timer.tftTimesPhysics;
             string filename = "TFTPhysicsData";
             string path = string.Concat(new object[] { Application.persistentDataPath, "/" + filename + ".json" });
             string data = "";
@@ -1699,7 +1706,8 @@ namespace DebugMod
         [BindableMethod(name = "Export TFT data to file (graphics)", category = "Loggers")]
         public static void TFTToFileGraphics()
         {
-            List<float> orig = GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics;
+            ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
+            List<float> orig = timer.tftTimesGraphics;
             string filename = "TFTGraphicsData";
             string path = string.Concat(new object[] { Application.persistentDataPath, "/" + filename + ".json" });
             string data = "";
