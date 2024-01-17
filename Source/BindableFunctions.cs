@@ -1676,8 +1676,8 @@ namespace DebugMod
         public static void ShowAverageTFT()
         {
             ChainTimer timer = GameManager.instance.gameObject.GetComponent<ChainTimer>();
-            Console.AddLine("Physics TFT avg (s): " + timer.tftTimesPhysics.Average().ToString("N9"));
-            Console.AddLine("Graphics TFT avg (s): " + timer.tftTimesGraphics.Average().ToString("N9"));
+            Console.AddLine("Physics TFT avg (s): " + timer.tftTimesPhysics.Average().ToString());
+            Console.AddLine("Graphics TFT avg (s): " + timer.tftTimesGraphics.Average().ToString());
         }
         [BindableMethod(name = "Clear TFT logger", category = "Loggers")]
         public static void ClearTFTValues()
@@ -1698,7 +1698,7 @@ namespace DebugMod
             string data = "";
             foreach (float item in orig)
             {
-                data += item.ToString("N9") + ", ";
+                data += item.ToString() + ", ";
             }
             data = "{" + data.Substring(0, data.Length - 2) + "}";
             File.WriteAllText(path, data);
@@ -1713,7 +1713,7 @@ namespace DebugMod
             string data = "";
             foreach (float item in orig)
             {
-                data += item.ToString("N9") + ", ";
+                data += item.ToString() + ", ";
             }
             data = "{" + data.Substring(0, data.Length - 2) + "}";
             File.WriteAllText(path, data);
