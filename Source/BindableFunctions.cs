@@ -7,6 +7,7 @@ using GlobalEnums;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using DebugMod.JankColoStuff;
+using System.Collections.Generic;
 namespace DebugMod
 {
     public static class BindableFunctions
@@ -259,16 +260,6 @@ namespace DebugMod
                 UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= CorniferYeeted;
                 Console.AddLine("Cornifer unyeeted from next loads on???");
             }
-        }
-        [BindableMethod(name = "show chain window (physics)", category = "Misc 2")]
-        public static void ToggleChainTimerPhysics()
-        {
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics;
-        }
-        [BindableMethod(name = "show chain window (graphics)", category = "Misc 2")]
-        public static void ToggleChainTimerGraphics()
-        {
-            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics;
         }
         #endregion
 
@@ -1608,7 +1599,7 @@ namespace DebugMod
 
         }
         */
-        
+
         // Use some threading or coroutine lol
         // commented out for being painfully unoptimised.
         // if you have use for this in its current state, you know how to uncomment and compile, or to ask me for the list :p
@@ -1637,6 +1628,89 @@ namespace DebugMod
                     );
         }
         */
+        #endregion
+
+        #region LogTFTstuff
+        [BindableMethod(name = "Show chain window (physics)", category = "Loggers")]
+        public static void ToggleChainTimerPhysics()
+        {
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsPhysics;
+        }
+        [BindableMethod(name = "Show chain window (graphics)", category = "Loggers")]
+        public static void ToggleChainTimerGraphics()
+        {
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().LogChainsGraphics;
+        }
+        [BindableMethod(name = "Delete Chain Data", category = "Loggers")]
+        public static void DeleteChainData()
+        {
+            //clear
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainGraphics.Clear();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainPhysics.Clear();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainGraphics.Clear();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainPhysics.Clear();
+            //trim
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainGraphics.TrimExcess();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().timesJumpChainPhysics.TrimExcess();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainGraphics.TrimExcess();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().framesJumpChainPhysics.TrimExcess();
+        }
+        [BindableMethod(name = "Toggle TFT logging (physics)", category = "Loggers")]
+        public static void ToggleTFTLoggingPhysics()
+        {
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTPhysics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTPhysics;
+            Console.AddLine("logging tft (physics) now set to " + GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTPhysics.ToString());
+        }
+        [BindableMethod(name = "Toggle TFT logging (graphics)", category = "Loggers")]
+        public static void ToggleTFTLoggingGraphics()
+        {
+            
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTGraphics = !GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTGraphics;
+            Console.AddLine("logging tft (graphics) now set to " + GameManager.instance.gameObject.GetComponent<ChainTimer>().logTFTGraphics.ToString());
+        }
+        [BindableMethod(name = "Show Average TFT", category = "Loggers")]
+        public static void ShowAverageTFT()
+        {
+            Console.AddLine("Physics TFT avg (s): " + GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.Average().ToString());
+            Console.AddLine("Graphics TFT avg (s): " + GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.Average().ToString());
+        }
+        [BindableMethod(name = "Clear TFT logger", category = "Loggers")]
+        public static void ClearTFTValues()
+        {
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics.Clear(); 
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.Clear();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics.TrimExcess();
+            GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesPhysics.TrimExcess();
+        }
+        [BindableMethod(name = "Export TFT data to file (physics)", category = "Loggers")]
+        public static void TFTToFilePhysics()
+        {
+            List<float> orig = GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics;
+            string filename = "TFTPhysicsData";
+            string path = string.Concat(new object[] { Application.persistentDataPath, "/" + filename + ".json" });
+            string data = "";
+            foreach (float item in orig)
+            {
+                data += item.ToString("N9") + ", ";
+            }
+            data = "{" + data.Substring(0, data.Length - 2) + "}";
+            File.WriteAllText(path, data);
+        }
+        [BindableMethod(name = "Export TFT data to file (graphics)", category = "Loggers")]
+        public static void TFTToFileGraphics()
+        {
+            List<float> orig = GameManager.instance.gameObject.GetComponent<ChainTimer>().tftTimesGraphics;
+            string filename = "TFTGraphicsData";
+            string path = string.Concat(new object[] { Application.persistentDataPath, "/" + filename + ".json" });
+            string data = "";
+            foreach (float item in orig)
+            {
+                data += item.ToString("N9") + ", ";
+            }
+            data = "{" + data.Substring(0, data.Length - 2) + "}";
+            File.WriteAllText(path, data);
+        }
+        
         #endregion
 
         #region MovePlayer

@@ -7,10 +7,13 @@ namespace DebugMod
 {
     public class ChainTimer : MonoBehaviour
     {
+        //toggleable logger bools
+        public bool logTFTGraphics = false;
+        public bool logTFTPhysics = false;
         public bool LogChainsGraphics = false;
         public bool LogChainsPhysics = false;
         #region Dependencies
-        public static readonly MethodInfo CanJumpPriv = typeof(HeroController).GetMethod("CanJump", BindingFlags.NonPublic | BindingFlags.Instance);
+        static readonly MethodInfo CanJumpPriv = typeof(HeroController).GetMethod("CanJump", BindingFlags.NonPublic | BindingFlags.Instance);
         //public static readonly MethodInfo CanDashPriv = typeof(HeroController).GetMethod("CanDash");
         private bool CanJump()
         {
@@ -25,15 +28,30 @@ namespace DebugMod
 
         //private bool CanDashChain() { return CanDash() && HeroController.instance.cState.touchingWall && !HeroController.instance.cState.wallSliding; }
         #endregion
+
+        #region Call Loggers
+        public void Update()
+        {
+            if (DebugMod.GM.isPaused) return;
+            if (LogChainsGraphics) GraphicsChains();
+            if (logTFTGraphics) GraphicsTFT();
+        }
+        public void FixedUpdate()
+        {
+            if (DebugMod.GM.isPaused) return;
+            if (LogChainsPhysics) PhysicsChains();
+            if (logTFTPhysics) PhysicsTFT();
+        }
+        #endregion
+
+        #region Log Chains
         bool lastFrameChainableGraphics = false;
-        List<float> timesJumpChainGraphics = [];
-        List<float> framesJumpChainGraphics = [];
+        public List<float> timesJumpChainGraphics = [];
+        public List<float> framesJumpChainGraphics = [];
         int JumpFramesElapsedGraphics;
         float JumpTimeElapsedGraphics;
-
-        public void HeroUpdate()
+        private void GraphicsChains()
         {
-            if (!LogChainsGraphics) return;
             #region Jump Chain Graphics
             //Jump Chain Graphics
             if (CanJumpChain())
@@ -82,18 +100,15 @@ namespace DebugMod
             */
             #endregion
         }
-
         //private float timeUnclingPhysics = 0;
-        bool lastFrameChainablePhysics = false;
+        bool lastFrameChainablePhysics = false; 
         //bool lastFrameDashChainablePhysics = false;
-        List<float> timesJumpChainPhysics = new();
-        List<float> framesJumpChainPhysics = new();
+        public List<float> timesJumpChainPhysics = [];
+        public List<float> framesJumpChainPhysics = [];
         int JumpFramesElapsedPhysics;
         float JumpTimeElapsedPhysics;
-
-        public void FixedUpdate() 
+        private void PhysicsChains() 
         {
-            if (!LogChainsPhysics) return;
             #region Jump Chain Physics
             //Jump Chain Physics
             if (CanJumpChain())
@@ -142,5 +157,19 @@ namespace DebugMod
             */
             #endregion
         }
-    }   
+        #endregion
+
+        #region Log TFT
+        public List<float> tftTimesGraphics = [];
+        public void GraphicsTFT()
+        {
+            tftTimesGraphics.Add(Time.deltaTime - Time.fixedDeltaTime);
+        }
+        public List<float> tftTimesPhysics = [];
+        public void PhysicsTFT()
+        {
+            tftTimesPhysics.Add(Time.deltaTime - Time.fixedDeltaTime);
+        }
+        #endregion
+    }
 }
