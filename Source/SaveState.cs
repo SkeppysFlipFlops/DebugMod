@@ -313,12 +313,9 @@ namespace DebugMod
             string loadingtime = loadingStateTime.ToString();
             Console.AddLine("Loaded savestate in " + loadingtime);
 
-            if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes();
+            if (data.useRoomSpecific != 0) RoomSpecific.DoRoomSpecific(data.saveScene, data.useRoomSpecific);
+            else if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes(); //it breaks so many things for roomspecifics
 
-            if (data.useRoomSpecific != 0)
-            {
-                RoomSpecific.DoRoomSpecific(data.saveScene, data.useRoomSpecific);
-            }
             //Benchwarp fixes courtesy of homothety, needed since savestates are now performed while paused
             // Revert pause menu timescale
             Time.timeScale = 1f;

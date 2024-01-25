@@ -177,7 +177,7 @@ namespace DebugMod
         
         public override string GetVersion()
         {
-            string version = "1.5.11";
+            string version = "1.5.12";
 #if DEBUG
             version = string.Concat(version, "-dev");
 #endif
