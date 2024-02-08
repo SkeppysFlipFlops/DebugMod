@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
@@ -13,15 +14,24 @@ namespace DebugMod
     {
         //This class is intended to recreate some scenarios, with more accuracy than that of the savestate class. 
         //used to ensure no double loads.
-        private static bool loading = false;
         #region Rooms
-        private static IEnumerator HerrahHelper(int index)
+        
+        private static readonly float MAX_TIMESCALE_LAGGY = 6;
+        private static readonly float MAX_TIMESCALE = 20;
+        private static bool loading = false;
+        private static void startCoro(IEnumerator routine)
         {
-            if (loading) yield break;
+            if (loading) DebugMod.GM.StopCoroutine(coroRef);
+            coroRef = DebugMod.GM.StartCoroutine(routine);
             loading = true;
-
-            yield return new WaitForEndOfFrame();
-
+        }
+        private static void stopCoro() {
+            GameManager.instance.hero_ctrl.RegainControl();
+            if (loading) DebugMod.GM.StopCoroutine(coroRef);
+            loading = false;
+        }
+        private static IEnumerator SpiderTownHelper(int index)
+        {
             float beforeFirstSpider = 1.39f;//all from roomsob
             float activateLeftTime = 2.02f;
             float activateRightTime = 26.64f;
@@ -32,21 +42,24 @@ namespace DebugMod
             float delay3 = activateRightTime - activateLeftTime;
             float delay4 = lastSlashTime - activateRightTime;
 
-            float afterTimeScale = 20f;
+            float afterTimeScale = index; //janky but idc
 
-            Vector3 roomStartPos =      new Vector3(8.156f, 58.5f);
-            Vector3 activateLeftPos =   new Vector3(23f, 58.5f);
-            Vector3 activateRightPos =  new Vector3(44f, 58.5f) ;
-            Vector3 trappedPos =        new Vector3(263.1f, 52.406f);
+            Vector3 roomStartPos = new Vector3(8.156f, 58.5f);
+            Vector3 activateLeftPos = new Vector3(23f, 58.5f);
+            Vector3 activateRightPos = new Vector3(44f, 58.5f);
+            Vector3 trappedPos = new Vector3(263.1f, 52.406f);
 
             string goName = "RestBench Spider";
             string websFsmName = "Fade";
             string benchFsmName = "Bench Control Spider";
 
+            DebugMod.HC.transform.position = roomStartPos;
+
             PlayMakerFSM websFSM = FindFsmGlobally(goName, websFsmName);
             PlayMakerFSM benchFSM = FindFsmGlobally(goName, benchFsmName);
 
-            if(index == 1)
+            if (afterTimeScale > MAX_TIMESCALE_LAGGY) afterTimeScale = MAX_TIMESCALE_LAGGY;
+            if (index >= 1)
             {
                 GameManager.instance.hero_ctrl.RelinquishControl();
                 Time.timeScale = afterTimeScale;
@@ -75,22 +88,37 @@ namespace DebugMod
             websFSM.SendEvent("FINISHED");
             websFSM.SendEvent("FINISHED"); //now can wiggle n stuff
             websFSM.FsmVariables.GetFsmInt("Struggles").Value = 4;
-            if (index == 1)
+            if (index >= 1)
             {
                 yield return new WaitForSeconds(delay4);
                 websFSM.SetState("Struggle");
                 Time.timeScale = 1f;
-                DebugMod.HC.RegainControl();
             }
-            //auto break webs to normalize
             loading = false;
+            //auto break webs to normalize
         }
+        private static Coroutine coroRef;
         private static void EnterSpiderTownTrap(int index) //Deepnest_Spider_Town
         {
-            DebugMod.GM.StartCoroutine(HerrahHelper(index));
+            startCoro(SpiderTownHelper(index));
+        }
+        private static IEnumerator WaitForTime(float seconds, float scale)
+        {
+            float t = seconds + Time.time;
+            Time.timeScale = scale;
+            while (t > Time.time)
+            {
+                yield return new WaitUntil(() => t > Time.time | (Time.timeScale != scale));
+                Time.timeScale = scale;
+            }
+            Time.timeScale = 1;
+            loading = false;
         }
         private static void BreakTHKChains(int index)
         {
+            float scale = index;
+            if (index < 5) { scale = 5; }
+            if (index > MAX_TIMESCALE) scale = MAX_TIMESCALE;
             string fsmName = "Control";
             string goName1 = "hollow_knight_chain_base";
             string goName2 = "hollow_knight_chain_base 2";
@@ -104,6 +132,7 @@ namespace DebugMod
             fsm2.SetState("Break");
             fsm3.SetState("Break");
             fsm4.SetState("Break");
+            startCoro(WaitForTime(13.5f, scale));
         } //Room_Final_Boss
         private static void ObtainDreamNail(int index)
         {
@@ -145,10 +174,23 @@ namespace DebugMod
                 quakeFakeFSM.SendEvent("QUAKE FAKE APPEAR");
             }
         }
+        private static void FastDreamerCutscene(int index)
+        {
+            if (index == 1)
+            {
+                string goName ="Mask Break Cutscene";
+                string fsmName = "Control";
+                PlayMakerFSM CutsceneFSM = FindFsmGlobally(goName, fsmName);
+                CutsceneFSM.SetState("Fade");
+            }
+        }
+
         #endregion
 
-        public static void DoRoomSpecific(string scene, int index)//index only used if multiple functionallities in one room, safe to ignore for now.
+        public static void DoRoomSpecific(string scene, int index)
         {
+            stopCoro();
+            if (index == 0) return;
             switch (scene)
             {
                 case "Deepnest_Spider_Town":
@@ -162,6 +204,9 @@ namespace DebugMod
                     break;
                 case "Ruins1_24":
                     FastSoulMaster(index);
+                    break;
+                case "Cutscene_Boss_Door":
+                    FastDreamerCutscene(index); 
                     break;
                 default:
                     Console.AddLine("No Room Specific Function Found In: " + scene);

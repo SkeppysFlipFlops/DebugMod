@@ -313,12 +313,14 @@ namespace DebugMod
             string loadingtime = loadingStateTime.ToString();
             Console.AddLine("Loaded savestate in " + loadingtime);
 
+            Time.timeScale = 1f;
+
             if (data.useRoomSpecific != 0) RoomSpecific.DoRoomSpecific(data.saveScene, data.useRoomSpecific);
             else if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes(); //it breaks so many things for roomspecifics
 
             //Benchwarp fixes courtesy of homothety, needed since savestates are now performed while paused
             // Revert pause menu timescale
-            Time.timeScale = 1f;
+
             GameManager.instance.FadeSceneIn();
 
             // We have to set the game non-paused because TogglePauseMenu sucks and UIClosePauseMenu doesn't do it for us.

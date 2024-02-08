@@ -155,8 +155,7 @@ namespace DebugMod
                 ModHooks.Instance.BeforeSceneLoadHook += OnLevelUnload;
                 ModHooks.Instance.TakeHealthHook += PlayerDamaged;
                 ModHooks.Instance.ApplicationQuitHook += SaveSettings;
-                GameManager.instance.gameObject.AddComponent<ChainTimer>();
-
+                ChainTimer.Setup();
                 BossHandler.PopulateBossLists();
                 GUIController.Instance.BuildMenus();
 
@@ -177,7 +176,7 @@ namespace DebugMod
         
         public override string GetVersion()
         {
-            string version = "1.5.13";
+            string version = "1.6.0";
 #if DEBUG
             version = string.Concat(version, "-dev");
 #endif

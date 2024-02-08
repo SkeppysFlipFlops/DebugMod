@@ -74,9 +74,6 @@
       <HintPath>.\References\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ValueTupleBridge, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ValueTupleBridge.0.1.5\lib\net35\ValueTupleBridge.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindableMethod.cs" />
@@ -185,9 +182,13 @@
     <EmbeddedResource Include="Images\BlankVertical.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <PackageReference Include="MonoMod.RuntimeDetour">
+      <Version>21.3.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="ValueTupleBridge">
+      <Version>0.1.5</Version>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <_PostBuildHookTimestamp>@(IntermediateAssembly->'%(FullPath).timestamp')</_PostBuildHookTimestamp>
