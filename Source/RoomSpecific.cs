@@ -17,15 +17,15 @@ namespace DebugMod
         #region Rooms
         
         private static readonly float MAX_TIMESCALE_LAGGY = 6;
-        private static readonly float MAX_TIMESCALE = 20;
+        private static readonly float MAX_TIMESCALE = 15;
         private static bool loading = false;
-        private static void startCoro(IEnumerator routine)
+        private static void StartCoro(IEnumerator routine)
         {
             if (loading) DebugMod.GM.StopCoroutine(coroRef);
             coroRef = DebugMod.GM.StartCoroutine(routine);
             loading = true;
         }
-        private static void stopCoro() {
+        private static void StopCoro() {
             GameManager.instance.hero_ctrl.RegainControl();
             if (loading) DebugMod.GM.StopCoroutine(coroRef);
             loading = false;
@@ -100,7 +100,7 @@ namespace DebugMod
         private static Coroutine coroRef;
         private static void EnterSpiderTownTrap(int index) //Deepnest_Spider_Town
         {
-            startCoro(SpiderTownHelper(index));
+            StartCoro(SpiderTownHelper(index));
         }
         private static IEnumerator WaitForTime(float seconds, float scale)
         {
@@ -132,7 +132,7 @@ namespace DebugMod
             fsm2.SetState("Break");
             fsm3.SetState("Break");
             fsm4.SetState("Break");
-            startCoro(WaitForTime(13.5f, scale));
+            StartCoro(WaitForTime(13.5f, scale));
         } //Room_Final_Boss
         private static void ObtainDreamNail(int index)
         {
@@ -189,7 +189,7 @@ namespace DebugMod
 
         public static void DoRoomSpecific(string scene, int index)
         {
-            stopCoro();
+            StopCoro();
             if (index == 0) return;
             switch (scene)
             {

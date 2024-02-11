@@ -6,6 +6,7 @@ using System;
 using Modding;
 using System.Collections;
 using MonoMod.RuntimeDetour;
+using HutongGames.PlayMaker.Actions;
 namespace DebugMod
 {
     public static class ChainTimer
@@ -21,10 +22,10 @@ namespace DebugMod
         public static Timer wallJumpTimer = new Timer();
 
         public static Timer jumpChainTimer = new Timer();
-
+        
         private static List<string> outputText = [];
         private static bool modified = false;
-        private static readonly int MAX_ENTRIES = 4;
+        private static readonly int MAX_ENTRIES = 20;
 
         #region Dependencies
         private static readonly BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
@@ -53,17 +54,8 @@ namespace DebugMod
         #region UI & MonoBehaviour
         public class ChainTimerMonobehaviour : MonoBehaviour
         {
-            private static void AddLine(string text)
-            {
-                modified = true;
-                if (outputText.Count >= MAX_ENTRIES)
-                {
-                    outputText.RemoveAt(0);
-                }
-                outputText.Add(text);
-            }
-            private static string GetText() => string.Join("\n", [.. outputText]);
-            static IEnumerator DeleteOldOutput = Kill();
+            private bool exists = false;
+            private static string GetText() => string.Join("\n", outputText.ToArray());
             public void FixedUpdate()
             {
                 ChainTimer.FixedUpdate();
@@ -71,11 +63,20 @@ namespace DebugMod
             
             public void Update()
             {
-                if (modified)
+                if (logChains || logRepresses || logWallJumps)
                 {
-                    ShowAlert(GetText());
-                    StopCoroutine(DeleteOldOutput);
-                    StartCoroutine(DeleteOldOutput);
+                    exists = false;
+                    if (modified)
+                    {
+                        ShowAlert(GetText());
+                        modified = false;
+                    }
+                }
+                else if (exists)
+                {
+                    exists = true;
+                    DestroyImmediate(displayedAlert);
+                    DestroyImmediate(canvas);
 
                 }
             }
@@ -98,7 +99,7 @@ namespace DebugMod
                     20,
                     TextAnchor.LowerRight,
                     new CanvasUtil.RectData(
-                        new Vector2(1920, 80),
+                        new Vector2(1920, 1080),
                         new Vector2(-40, 40),
                         new Vector2(1, 0),
                         new Vector2(1, 0),
@@ -112,18 +113,27 @@ namespace DebugMod
                 displayedAlert.SetActive(true);
             }
         }
-
+        public static void AddLine(string text)
+        {
+            modified = true;
+            if (outputText.Count >= MAX_ENTRIES)
+            {
+                outputText.RemoveAt(0);
+            }
+            outputText.Add(text);
+        }
         public class Timer()
         {
             private bool running = false;
             public float time = 0;
-            public int frames = 0;
+            public int frame = 1;
+            public int graphicsFrames = 0;
             public List<float> timesList = [];
             public List<int> framesList = [];
             public bool stoppedNow = false;
             public void FixedTick()
             {
-                if (running) frames++;
+                if (running) frame++;
             }
             public void Tick(bool cond, float time)
             {
@@ -132,6 +142,7 @@ namespace DebugMod
                 {
                     if (!running) ResetAndStart();
                     this.time += time;
+                    graphicsFrames++;
                 }
                 else if (!cond && running)
                 {
@@ -144,28 +155,31 @@ namespace DebugMod
             }
             public void Print(string name, bool showAvg = false)
             {
-                Console.AddLine(name);
-                Console.AddLine("Last:   | " + time.ToString() + "s, " + frames.ToString() + "f");
+                string message = name;
+                message += " | " + time.ToString("F4") + "s, " + frame.ToString() + "f";//+ graphicsFrames.ToString + "phys frames";
                 if (showAvg)
                 {
-                    Console.AddLine("Average |  " + AverageTime().ToString() + "s, " + AverageFrames().ToString() + "f");
+                    message += "Average |  " + AverageTime().ToString() + "s, " + AverageFrames().ToString();
                 }
+                AddLine(message);
             }
             public void SaveTime()
             {
                 timesList.Add(time);
-                framesList.Add(frames);
+                framesList.Add(frame);
             }
             private void ResetAndStart()
             {
                 time = 0;
-                frames = 0;
+                graphicsFrames = 0;
+                frame = 1;
                 running = true;
             }
             public void ClearRecord()
             {
+                graphicsFrames = 0;
                 time = 0;
-                frames = 0;
+                frame = 0;
                 running = false;
                 stoppedNow = false;
                 timesList.Clear();
@@ -214,16 +228,16 @@ namespace DebugMod
         #region Log Represses
         private static void LogRepresses()
         {
-            string text = "Repress Input";
+            string text = "Repress";
             bool timeCond = !DebugMod.IH.inputActions.jump.IsPressed;
             repressTimer.Tick(timeCond, Time.deltaTime);
             if (repressTimer.stoppedNow)
             {
                 repressTimer.Stop();
-                if (repressTimer.time < .5f)
+                if (repressTimer.time < .15f)
                 {
                     repressTimer.SaveTime();
-                    repressTimer.Print(text + "Repressed Frame");
+                    repressTimer.Print(text);
                 }
             }
         }
