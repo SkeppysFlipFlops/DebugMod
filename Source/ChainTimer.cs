@@ -165,8 +165,8 @@ namespace DebugMod
             }
             public void SaveTime()
             {
-                timesList.Add(time);
-                framesList.Add(frame);
+                //timesList.Add(time);
+                //framesList.Add(frame);
             }
             private void ResetAndStart()
             {
@@ -195,6 +195,7 @@ namespace DebugMod
         #region Hook QueueInput
         public static void Setup()
         {
+            CanvasUtil.CreateFonts();
             Hook hookinst = new Hook(
                 typeof(HeroController).GetMethod("LookForQueueInput", BindingFlags.NonPublic | BindingFlags.Instance),
                 QueuedInputHook);
