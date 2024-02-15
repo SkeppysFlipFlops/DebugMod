@@ -313,6 +313,12 @@ namespace DebugMod
             string loadingtime = loadingStateTime.ToString();
             Console.AddLine("Loaded savestate in " + loadingtime);
 
+            PlayerData.instance.hasXunFlower = false;
+            PlayerData.instance.health = data.savedPd.health;
+            HeroController.instance.TakeHealth(1);
+            HeroController.instance.AddHealth(1);
+            PlayerData.instance.hasXunFlower = data.savedPd.hasXunFlower;
+
             Time.timeScale = 1f;
 
             if (data.useRoomSpecific != 0) RoomSpecific.DoRoomSpecific(data.saveScene, data.useRoomSpecific);
