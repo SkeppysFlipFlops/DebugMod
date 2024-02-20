@@ -65,16 +65,16 @@ namespace DebugMod
             {
                 if (logChains || logRepresses || logWallJumps)
                 {
-                    exists = false;
-                    if (modified)
+                    if (modified || !exists)
                     {
                         ShowAlert(GetText());
                         modified = false;
+                        exists = true;
                     }
                 }
                 else if (exists)
                 {
-                    exists = true;
+                    exists = false;
                     DestroyImmediate(displayedAlert);
                     DestroyImmediate(canvas);
 
@@ -122,6 +122,13 @@ namespace DebugMod
             }
             outputText.Add(text);
         }
+        public static void ClearLines()
+        {
+            modified = true;
+            outputText.Clear();
+            outputText.TrimExcess();
+        }
+
         public class Timer()
         {
             private bool running = false;

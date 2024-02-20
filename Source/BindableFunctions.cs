@@ -1655,11 +1655,12 @@ namespace DebugMod
             Console.AddLine(ChainTimer.logRepresses.ToString());
         }
         [BindableMethod(name = "Delete Input Data", category = "Loggers")]
-        public static void DeleteChainData()
+        public static void DeleteInputData()
         {
             ChainTimer.jumpChainTimer.ClearRecord();
             ChainTimer.repressTimer.ClearRecord();
             ChainTimer.wallJumpTimer.ClearRecord();
+            ChainTimer.ClearLines();
         }
         [BindableMethod(name = "Toggle TFT logging (graphics)", category = "Loggers")]
         public static void ToggleTFTLoggingGraphics()
