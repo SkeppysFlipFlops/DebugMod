@@ -262,7 +262,7 @@ namespace DebugMod
 
             if (data.facingRight == 1) HeroController.instance.FaceRight();
             else if (data.facingRight == 0) HeroController.instance.FaceLeft();
-
+            HeroController.instance.SetHazardRespawn(data.savePos, HeroController.instance.cState.facingRight);
             //This is all the shit that fixes lp debug
             GameManager.instance.cameraCtrl.FadeSceneIn();
 
