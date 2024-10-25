@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using HutongGames.PlayMaker.Actions;
+using MonoMod.Utils;
 using UnityEngine;
 
 
@@ -162,7 +163,8 @@ namespace DebugMod
                     paramSlot,
                     ".json"
                 });
-                DebugMod.instance.Log("prep filepath: " + data.filePath);
+                // no 
+                //DebugMod.instance.Log("prep filepath: " + data.filePath);
 
                 if (File.Exists(data.filePath))
                 {
@@ -199,40 +201,48 @@ namespace DebugMod
             //prevent double loads/saves, black screen, etc
             loadingSavestate = true;
 
+            //prevents silly things from happening
+            Time.timeScale = 0;
+
             //timer for loading savestates, used in diagnostic purposes
             System.Diagnostics.Stopwatch loadingStateTimer = new System.Diagnostics.Stopwatch();
             loadingStateTimer.Start();
 
-            /*
-            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-
-            if (data.saveScene == scene)
-            {
-                yield return UnityEngine.SceneManagement.SceneManager.UnloadScene(scene);
-            }
-            */
-            //Console.AddLine("LoadStateCoro line1: " + data.savedPd.hazardRespawnLocation.ToString());
             int oldMPReserveMax = PlayerData.instance.MPReserveMax;
             int oldMP = PlayerData.instance.MPCharge;
 
+            //if (DebugMod.CurrentHazardCoro != null) HeroController.instance.StopCoroutine(DebugMod.CurrentHazardCoro);
+            //if (DebugMod.CurrentInvulnCoro != null) HeroController.instance.StopCoroutine(DebugMod.CurrentInvulnCoro);
+            //DebugMod.CurrentHazardCoro = null;
+            //DebugMod.CurrentInvulnCoro = null;
+
+            //fixes knockback storage
+            typeof(HeroController).GetMethod("CancelDamageRecoil", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(HeroController.instance, []);
+
+            //ends hazard respawn animation
+            var invPulse = HeroController.instance.GetComponent<InvulnerablePulse>();
+            invPulse.stopInvulnerablePulse();
+
+            //remove dialogues if exists
+            PlayMakerFSM.BroadcastEvent("BOX DOWN DREAM");
+            PlayMakerFSM.BroadcastEvent("CONVO CANCEL");
+
             data.cameraLockArea = (data.cameraLockArea ?? typeof(CameraController).GetField("currentLockArea", BindingFlags.Instance | BindingFlags.NonPublic));
-            string scene = "Room_Mender_House";
-            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Room_Mender_House")
-            {
-                scene = "Room_Sly_Storeroom";
-            }
-            GameManager.instance.ChangeToScene(scene, "", 0f);// i hate that i have to do this.
-            while (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != scene)
-            {
-                yield return null;
-            }
-            GameManager.instance.sceneData = (SceneData.instance = JsonUtility.FromJson<SceneData>(JsonUtility.ToJson(data.savedSd)));
+            string dummyScene = "Room_Mender_House";
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Room_Mender_House") dummyScene = "Room_Sly_Storeroom";
+
+            GameManager.instance.ChangeToScene(dummyScene, "", 0f);//trust
+
+            yield return new WaitUntil(() => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != dummyScene);
+
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(data.savedSd), SceneData.instance);
             GameManager.instance.ResetSemiPersistentItems();
 
             yield return null;
             HeroController.instance.gameObject.transform.position = data.savePos;
-            PlayerData.instance = (GameManager.instance.playerData = (HeroController.instance.playerData = JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(data.savedPd))));
-            GameManager.instance.ChangeToScene(data.saveScene, "", 0.4f);
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(data.savedPd), PlayerData.instance);
+            GameManager.instance.ChangeToScene(data.saveScene, "", 0f);
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(data.savedSd), SceneData.instance);
             try
             {
                 data.cameraLockArea.SetValue(GameManager.instance.cameraCtrl, data.lockArea);
@@ -246,58 +256,20 @@ namespace DebugMod
             yield return new WaitUntil(() => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == data.saveScene);
             HeroController.instance.playerData = PlayerData.instance;
             HeroController.instance.geoCounter.playerData = PlayerData.instance;
-            HeroController.instance.geoCounter.TakeGeo(0);
-
             HeroController.instance.proxyFSM.SendEvent("HeroCtrl-HeroLanded");
             HeroAnimationController component = HeroController.instance.GetComponent<HeroAnimationController>();
             typeof(HeroAnimationController).GetField("pd", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(component, PlayerData.instance);
-           
-            HeroController.instance.TakeHealth(1);
-            HeroController.instance.AddHealth(1);
-            GameCameras.instance.hudCanvas.gameObject.SetActive(true);
-            HeroController.instance.TakeHealth(1);
-            HeroController.instance.AddHealth(1);
-            
-            GameManager.instance.inputHandler.RefreshPlayerData();
 
-            if (data.facingRight == 1)
-            {
-                HeroController.instance.FaceRight();
-            }
-            else if (data.facingRight == 0)
-            {
-                HeroController.instance.FaceLeft();
-            }
+            if (data.facingRight == 1) HeroController.instance.FaceRight();
+            else if (data.facingRight == 0) HeroController.instance.FaceLeft();
 
             //This is all the shit that fixes lp debug
+            GameManager.instance.cameraCtrl.FadeSceneIn();
+
             HeroController.instance.CharmUpdate();
 
             PlayMakerFSM.BroadcastEvent("CHARM INDICATOR CHECK");    //update twister             
             PlayMakerFSM.BroadcastEvent("UPDATE NAIL DAMAGE");       //update nail
-
-            //step 2,manually trigger vessels lol, this is the only way besides turning off the mesh, but that will break stuff when you collect them
-            if (PlayerData.instance.MPReserveMax < 33) GameObject.Find("Vessel 1").LocateMyFSM("vessel_orb").SetState("Init");
-            else GameObject.Find("Vessel 1").LocateMyFSM("vessel_orb").SetState("Up Check");
-            if (PlayerData.instance.MPReserveMax < 66) GameObject.Find("Vessel 2").LocateMyFSM("vessel_orb").SetState("Init");
-            else GameObject.Find("Vessel 2").LocateMyFSM("vessel_orb").SetState("Up Check");
-            if (PlayerData.instance.MPReserveMax < 99) GameObject.Find("Vessel 3").LocateMyFSM("vessel_orb").SetState("Init");
-            else GameObject.Find("Vessel 3").LocateMyFSM("vessel_orb").SetState("Up Check");
-            if (PlayerData.instance.MPReserveMax < 132) GameObject.Find("Vessel 4").LocateMyFSM("vessel_orb").SetState("Init");
-            else GameObject.Find("Vessel 4").LocateMyFSM("vessel_orb").SetState("Up Check");
-            //step 3, take and add some soul
-            HeroController.instance.TakeMP(1);
-            HeroController.instance.AddMPChargeSpa(1);
-            //step 4, run animations later to actually add the soul on the main vessel
-            PlayMakerFSM.BroadcastEvent("MP DRAIN");
-            PlayMakerFSM.BroadcastEvent("MP LOSE");
-            PlayMakerFSM.BroadcastEvent("MP RESERVE DOWN");
-
-            //write geo
-            HeroController.instance.geoCounter.geoTextMesh.text = data.savedPd.geo.ToString();
-
-            //this kills enemies that were dead on the state, they respawn from previous code
-            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(data.savedSd), SceneData.instance);
-
 
             if (DebugMod.settings.EnemiesPanelVisible) EnemiesPanel.RefreshEnemyList();
             //UnityEngine.Object.Destroy(GameCameras.instance.gameObject);
@@ -313,30 +285,80 @@ namespace DebugMod
             string loadingtime = loadingStateTime.ToString();
             Console.AddLine("Loaded savestate in " + loadingtime);
 
-            PlayerData.instance.hasXunFlower = false;
-            PlayerData.instance.health = data.savedPd.health;
-            HeroController.instance.TakeHealth(1);
-            HeroController.instance.AddHealth(1);
-            PlayerData.instance.hasXunFlower = data.savedPd.hasXunFlower;
 
             Time.timeScale = 1f;
-
+            
+            typeof(HeroController).GetMethod("FinishedEnteringScene",BindingFlags.Instance | BindingFlags.NonPublic).Invoke(HeroController.instance, [true]);
+            HUDFixes();
+            if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes();
+            RoomSpecific.StopCoros();
             if (data.useRoomSpecific != 0) RoomSpecific.DoRoomSpecific(data.saveScene, data.useRoomSpecific);
-            else if (DebugMod.settings.SaveStateGlitchFixes) SaveStateGlitchFixes(); //it breaks so many things for roomspecifics
 
-            //Benchwarp fixes courtesy of homothety, needed since savestates are now performed while paused
-            // Revert pause menu timescale
-
-            GameManager.instance.FadeSceneIn();
 
             // We have to set the game non-paused because TogglePauseMenu sucks and UIClosePauseMenu doesn't do it for us.
             GameManager.instance.isPaused = false;
             //This allows the next pause to stop the game correctly, idk what the variable for 1221 api is
             //Time.TimeController.GenericTimeScale = 1f;x
-
+           
             yield break;
 
 
+
+        }
+        private void HUDFixes()
+        {
+
+            GameCameras.instance.hudCanvas.gameObject.SetActive(true);
+
+            HeroController.instance.geoCounter.geoTextMesh.text = data.savedPd.geo.ToString();
+
+            bool isInfiniteHp = DebugMod.infiniteHP;
+            DebugMod.infiniteHP = false;
+            PlayerData.instance.hasXunFlower = false;
+            PlayerData.instance.health = data.savedPd.health;
+            HeroController.instance.TakeHealth(1);
+            HeroController.instance.AddHealth(1);
+            PlayerData.instance.hasXunFlower = data.savedPd.hasXunFlower;
+            DebugMod.infiniteHP = isInfiniteHp;
+
+            int healthBlue = data.savedPd.healthBlue;
+            for (int i = 0; i < healthBlue; i++)
+            {
+                PlayMakerFSM.BroadcastEvent("ADD BLUE HEALTH");
+            }
+
+            //should fix hp
+            //the "Idle" mesh never gets disabled when Charm Indicator runs
+            //running the animation quickly would work but this does too and i understand it
+            int maxHP = GameManager.instance.playerData.maxHealth;
+            for (int i = maxHP; i > 0; i--)
+            {
+                GameObject health = GameObject.Find("Health " + i.ToString());
+                PlayMakerFSM fsm = health.LocateMyFSM("health_display");
+                Transform idle = health.transform.Find("Idle");
+                //This is the "HP Full" mesh, which covers the empty mesh
+                idle.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                //This is the "HP Empty" mesh
+                health.GetComponent<MeshRenderer>().enabled = true;
+                //This turns back on the "HP Full" mesh if we should
+                fsm.SetState("Check if Full");
+            }
+
+            if (PlayerData.instance.MPReserveMax < 33) GameObject.Find("Vessel 1").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 1").LocateMyFSM("vessel_orb").SetState("Up Check");
+            if (PlayerData.instance.MPReserveMax < 66) GameObject.Find("Vessel 2").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 2").LocateMyFSM("vessel_orb").SetState("Up Check");
+            if (PlayerData.instance.MPReserveMax < 99) GameObject.Find("Vessel 3").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 3").LocateMyFSM("vessel_orb").SetState("Up Check");
+            if (PlayerData.instance.MPReserveMax < 132) GameObject.Find("Vessel 4").LocateMyFSM("vessel_orb").SetState("Init");
+            else GameObject.Find("Vessel 4").LocateMyFSM("vessel_orb").SetState("Up Check");
+
+            HeroController.instance.TakeMP(1);
+            HeroController.instance.AddMPChargeSpa(1);
+
+            PlayMakerFSM.BroadcastEvent("MP DRAIN");
+            PlayMakerFSM.BroadcastEvent("MP LOSE");
+            PlayMakerFSM.BroadcastEvent("MP RESERVE DOWN");
 
         }
 
@@ -357,12 +379,13 @@ namespace DebugMod
             spellFSM.SetState("Inactive");
 
             //invuln
-            HeroController.instance.gameObject.LocateMyFSM("Roar Lock").FsmVariables.FindFsmBool("No Roar").Value = false;
+            //errors out idk why
+            //HeroController.instance.gameObject.LocateMyFSM("Roar Lock").FsmVariables.FindFsmBool("No Roar").Value = false;
             HeroController.instance.cState.invulnerable = false;
-
+            
             //no clip
             rb2d.isKinematic = false;
-
+            
             //TODO: Fix this so it works
             //bench storage 
             GameManager.instance.SetPlayerDataBool(nameof(PlayerData.atBench), false);
@@ -378,7 +401,7 @@ namespace DebugMod
                 }
 
                 HeroController.instance.cState.nearBench = false;
-            //}
+            //}*/
         }
         #endregion
 
@@ -397,11 +420,11 @@ namespace DebugMod
 
         public string[] GetSaveStateInfo()
         {
-            return new string[]
-            {
+            return
+            [
                 data.saveStateIdentifier,
                 data.saveScene
-            };
+            ];
 
         }
         public SaveStateData DeepCopy()

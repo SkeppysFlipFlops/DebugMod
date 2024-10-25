@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 
 namespace DebugMod
@@ -13,22 +8,18 @@ namespace DebugMod
     public static class RoomSpecific
     {
         //This class is intended to recreate some scenarios, with more accuracy than that of the savestate class. 
-        //used to ensure no double loads.
         #region Rooms
         
         private static readonly float MAX_TIMESCALE_LAGGY = 6;
-        private static readonly float MAX_TIMESCALE = 15;
-        private static bool loading = false;
+        private static readonly float MAX_TIMESCALE = 20;
+                private static List<Coroutine> coroRefs =[];
         private static void StartCoro(IEnumerator routine)
         {
-            if (loading) DebugMod.GM.StopCoroutine(coroRef);
-            coroRef = DebugMod.GM.StartCoroutine(routine);
-            loading = true;
+            coroRefs.Add(DebugMod.GM.StartCoroutine(routine));
         }
-        private static void StopCoro() {
-            GameManager.instance.hero_ctrl.RegainControl();
-            if (loading) DebugMod.GM.StopCoroutine(coroRef);
-            loading = false;
+        public static void StopCoros() { 
+            coroRefs.ForEach(DebugMod.GM.StopCoroutine);
+            coroRefs = [];
         }
         private static IEnumerator SpiderTownHelper(int index)
         {
@@ -44,10 +35,10 @@ namespace DebugMod
 
             float afterTimeScale = index; //janky but idc
 
-            Vector3 roomStartPos = new Vector3(8.156f, 58.5f);
-            Vector3 activateLeftPos = new Vector3(23f, 58.5f);
-            Vector3 activateRightPos = new Vector3(44f, 58.5f);
-            Vector3 trappedPos = new Vector3(263.1f, 52.406f);
+            Vector2 roomStartPos = new(8.156f, 58.5f);
+            Vector2 activateLeftPos = new(23f, 58.5f);
+            Vector2 activateRightPos = new(44f, 58.5f);
+            Vector2 trappedPos = new(263.1f, 52.406f);
 
             string goName = "RestBench Spider";
             string websFsmName = "Fade";
@@ -62,7 +53,7 @@ namespace DebugMod
             if (index >= 1)
             {
                 GameManager.instance.hero_ctrl.RelinquishControl();
-                Time.timeScale = afterTimeScale;
+                WaitForTime(lastSlashTime, afterTimeScale);
 
                 GameManager.instance.isPaused = false;
                 
@@ -94,28 +85,19 @@ namespace DebugMod
                 websFSM.SetState("Struggle");
                 Time.timeScale = 1f;
             }
-            loading = false;
             //auto break webs to normalize
         }
-        private static Coroutine coroRef;
         private static void EnterSpiderTownTrap(int index) //Deepnest_Spider_Town
         {
             StartCoro(SpiderTownHelper(index));
         }
-        private static IEnumerator WaitForTime(float seconds, float scale)
+        private static void BreakTHKChains(int index) //Room_Final_Boss
         {
-            float t = seconds + Time.time;
-            Time.timeScale = scale;
-            while (t > Time.time)
-            {
-                yield return new WaitUntil(() => t > Time.time | (Time.timeScale != scale));
-                Time.timeScale = scale;
-            }
-            Time.timeScale = 1;
-            loading = false;
+            StartCoro(BreakTHKChainscoro(index));
         }
-        private static void BreakTHKChains(int index)
+        private static IEnumerator BreakTHKChainscoro(int index)
         {
+            float time = 14.2f;
             float scale = index;
             if (index < 5) { scale = 5; }
             if (index > MAX_TIMESCALE) scale = MAX_TIMESCALE;
@@ -132,7 +114,23 @@ namespace DebugMod
             fsm2.SetState("Break");
             fsm3.SetState("Break");
             fsm4.SetState("Break");
-            StartCoro(WaitForTime(13.5f, scale));
+            bool right = HeroController.instance.cState.facingRight;
+            Vector2 current = DebugMod.HC.transform.position;
+            DebugMod.HC.transform.position = new Vector2(27.4200f, 6.410425f);
+            WaitForTime(1, scale);
+            yield return new WaitForSeconds(1);
+            DebugMod.HC.transform.position = current;
+            if (right)
+            {
+                HeroController.instance.FaceRight();
+            }
+            else
+            {
+                HeroController.instance.FaceLeft();
+            }
+            WaitForTime(time-1, scale);
+            yield return new WaitForSeconds(time-1);
+            Time.timeScale = 1f;
         } //Room_Final_Boss
         private static void ObtainDreamNail(int index)
         {
@@ -148,7 +146,22 @@ namespace DebugMod
             fsm.SendEvent("ZONE 2");
             fsm.SendEvent("ZONE 3");
             fsm.SendEvent("FINISHED");
-            DebugMod.HC.transform.position = new Vector3(263.1f, 52.406f);
+            DebugMod.HC.transform.position = new Vector2(263.1f, 52.406f);
+        }
+        private static void WaitForTime(float seconds, float scale)
+        {
+            StartCoro(WaitForTimeCoro(seconds,scale));
+        }
+        private static IEnumerator WaitForTimeCoro(float seconds, float scale)
+        {
+            float t = seconds + Time.time;
+            Time.timeScale = scale;
+            while (t > Time.time)
+            {
+                yield return new WaitUntil(() => t > Time.time | (Time.timeScale != scale));
+                Time.timeScale = scale;
+            }
+            Time.timeScale = 1;
         }
         private static void FastSoulMaster(int index)
         {
@@ -157,14 +170,14 @@ namespace DebugMod
             if (index == 1)
             {
                 //start phase 1
-                DebugMod.HC.transform.position = new Vector3(19.5810f, 29.41113f); //make sure youre at the right spot ig?
+                DebugMod.HC.transform.position = new Vector2(19.5810f, 29.41113f); //make sure youre at the right spot ig?
                 PlayMakerFSM fsm = FindFsmGlobally(goName, fsmName);
                 fsm.SetState("Init");
             }
             else if(index == 2)
             {
                 //start phase 2
-                DebugMod.HC.transform.position = new Vector3(19.5810f, 29.41113f); //make sure youre at the right spot ig?
+                DebugMod.HC.transform.position = new Vector2(19.5810f, 29.41113f); //make sure youre at the right spot ig?
                 string quakegoname= "Quake Fake Parent";
                 string quakefsmname = "Appear";
                 PlayMakerFSM fsm = FindFsmGlobally(goName, fsmName);
@@ -189,7 +202,7 @@ namespace DebugMod
 
         public static void DoRoomSpecific(string scene, int index)
         {
-            StopCoro();
+            //GameManager.instance.hero_ctrl.RegainControl();
             if (index == 0) return;
             switch (scene)
             {

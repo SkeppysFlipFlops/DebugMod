@@ -36,16 +36,7 @@ namespace DebugMod
         public static string currentStateOperation = null;
         //public static bool hasFury = typeof(Modding.ReflectionHelper).GetField(, "fury");
 
-        private static string[] stateStrings =
-        {
-            "Quickslot (save)",
-            "Quickslot (load)",
-            "Save quickslot to file",
-            "Load quickslot from file",
-            "Save new state to file",
-            "Load new state from file"
-        };
-        private static Dictionary<int, SaveState> saveStateFiles = new Dictionary<int, SaveState>();
+        private static Dictionary<int, SaveState> saveStateFiles = [];
 
         //private static bool autoSlot;
         private DateTime timeoutHelper;
